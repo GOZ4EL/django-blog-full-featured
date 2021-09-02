@@ -6,6 +6,17 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 
 
+class PublishedManager(models.Manager):
+    """
+    Model manager for the Post model, 
+    which retrieves all objects with the 'published' status. 
+    """
+    def get_queryset(self):
+        return super(PublishedManager,
+                     self).get_queryset()\
+                          .filter(status='published')
+
+
 class Post(models.Model):
     """
     Definition of the Post Model.
@@ -29,11 +40,11 @@ class Post(models.Model):
                               default='draft')
 
     class Meta:
-        """
-        Meetadata of the post model.
-        """
         ordering = ('-publish',)
 
     def __str__(self):
         return self.title
+
+    objects = models.Manager()
+    published = PublishedManager()
 
