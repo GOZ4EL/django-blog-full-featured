@@ -42,8 +42,8 @@ def post_share(request, post_id):
         form = EmailPostForm(request.POST)
         if form.is_valid():
             cd = form.cleaned_data
-            post_url = request.build.absolute_uri(
-                post.get.absolute_url())
+            post_url = request.build_absolute_uri(
+                post.get_absolute_url())
             subject = f"{cd['name']} recommends you read " \
                       f"{post.title}"
             message = f"Read {post.title} at {post_url}\n\n" \
@@ -53,5 +53,6 @@ def post_share(request, post_id):
     else:
         form = EmailPostForm()
     return render(request, 'blog/post/share.html', {'post': post,
-                                                    'form': form})
-
+                                                    'form': form,
+                                                    'sent': sent})
+                                                        
