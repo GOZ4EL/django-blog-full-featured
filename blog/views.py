@@ -9,6 +9,7 @@ from django.core.paginator import(
 )
 from django.views.generic import ListView
 from django.core.mail import send_mail
+from django.db.models import Count
 
 from taggit.models import Tag
 
@@ -64,12 +65,21 @@ def post_detail(request, year, month, day, post):
             new_comment.save()
     else:
         comment_form = CommentForm()
+
+    post_tags_ids = post.tags.values_list('id', flat=True)
+    similar_posts = post.published.filter(tags__in=post_tags_ids)\
+                                  .exclude(id=post.id) 
+    similar_posts = similar_posts.annotate(same_tags=Count('tags'))\
+                                .order_by('-same_tags', '-publish') [:4]
+
+
     return render(request,
                   'blog/post/detail.html',
                   {'post': post,
                    'comments': comments,
                    'new_comment': new_comment,
-                   'comment_form': comment_form})
+                   'comment_form': comment_form,
+                   'similar_posts': similar_posts})
 
 
 def post_share(request, post_id):
@@ -82,9 +92,9 @@ def post_share(request, post_id):
             cd = form.cleaned_data
             post_url = request.build_absolute_uri(
                 post.get_absolute_url())
-            subject = f"{cd['name']} recommends you read " \
+            subject = f"{cd['name']} recommends you read "\
                       f"{post.title}"
-            message = f"Read {post.title} at {post_url}\n\n" \
+            message = f"Read {post.title} at {post_url}\n\n"\
                       f"{cd['name']}\s comments: {cd['comments']}"
             send_mail(subject, message, 'admin@admin.com', [cd['to']])
             sent = True
