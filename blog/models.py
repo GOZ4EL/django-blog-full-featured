@@ -6,6 +6,8 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.urls import reverse
 
+from taggit.managers import TaggableManager
+
 
 class PublishedManager(models.Manager):
     """
@@ -54,6 +56,8 @@ class Post(models.Model):
                        args=[self.publish.year,
                              self.publish.month,
                              self.publish.day, self.slug])
+
+    tags = TaggableManager()
 
 
 class Comment(models.Model):
