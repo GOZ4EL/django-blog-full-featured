@@ -13,7 +13,8 @@ from django.db.models import Count
 from django.contrib.postgres.search import(
     SearchVector,
     SearchQuery,
-    SearchRank
+    SearchRank,
+    TrigramSimilarity
 )
 
 from taggit.models import Tag
@@ -124,9 +125,9 @@ def post_search(request):
             search_vector = SearchVector('title', weight='A') + \
                             SearchVector('body', weight='B')
             search_query = SearchQuery(query)
-            results = post.published.annotate(
-                          rank=SearchRank(search_vector, search_query)
-                      ).filter(rank__gte=0.3).order_by('-rank')
+            results = Post.published.annotate(
+                          similarity=TrigramSimilarity('title', query),
+                      ).filter(similarity__gt=0.1).order_by('-similarity')
     return render(request,
                   'blog/post/search.html',
                   {'form': form,
