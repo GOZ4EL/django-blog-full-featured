@@ -14,14 +14,14 @@ from django.contrib.postgres.search import(
     SearchVector,
     SearchQuery,
     SearchRank
-) 
+)
 
 from taggit.models import Tag
 
 from .models import Post, Comment
 from .forms import(
-    EmailPostForm, 
-    CommentForm, 
+    EmailPostForm,
+    CommentForm,
     SearchForm
 ) 
 
@@ -61,7 +61,7 @@ def post_detail(request, year, month, day, post):
                                    publish__year=year,
                                    publish__month=month,
                                    publish__day=day)
-    
+
     comments = post.comments.filter(active=True)
 
     new_comment = None
@@ -77,7 +77,7 @@ def post_detail(request, year, month, day, post):
 
     post_tags_ids = post.tags.values_list('id', flat=True)
     similar_posts = Post.published.filter(tags__in=post_tags_ids)\
-                                  .exclude(id=post.id) 
+                                  .exclude(id=post.id)
     similar_posts = similar_posts.annotate(same_tags=Count('tags'))\
                                 .order_by('-same_tags', '-publish') [:4]
 
@@ -103,7 +103,7 @@ def post_share(request, post_id):
             subject = f"{cd['name']} recommends you read "\
                       f"{post.title}"
             message = f"Read {post.title} at {post_url}\n\n"\
-                      f"{cd['name']}\s comments: {cd['comments']}"
+                      f"{cd['name']}\'s comments: {cd['comments']}"
             send_mail(subject, message, 'admin@admin.com', [cd['to']])
             sent = True
     else:
@@ -121,13 +121,13 @@ def post_search(request):
         form = SearchForm(request.GET)
         if form.is_valid():
             query = form.cleaned_data['query']
-            search_vector = SearchVector('title', 'body')
+            search_vector = SearchVector('title', weight='A') + \
+                            SearchVector('body', weight='B')
             search_query = SearchQuery(query)
             results = post.published.annotate(
-                          search=search_vector,
                           rank=SearchRank(search_vector, search_query)
-                      ).filter(search=search_query).order_by('-rank')
-    return render(request, 
+                      ).filter(rank__gte=0.3).order_by('-rank')
+    return render(request,
                   'blog/post/search.html',
                   {'form': form,
                    'query': query,
