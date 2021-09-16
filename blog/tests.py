@@ -42,7 +42,7 @@ class PostListViewTests(TestCase):
         """
         Posts 'with' draft status aren't displayed on the post list.
         """
-        user = User.objects.create(username='authuser', 
+        user = User.objects.create(username='authuser',
                                    password='sahfdsau1324$9\'%')
         post = create_post(title='Test Post', slug='test', author=user,
                            body='This is a post with the draft status',
@@ -104,4 +104,3 @@ class PostListViewTests(TestCase):
         response = self.client.get(reverse('blog:post_list'),
                                    {'page': 3})
         self.assertQuerysetEqual(response.context['posts'], [posts[-1]])
-
